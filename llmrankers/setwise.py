@@ -141,14 +141,20 @@ class SetwiseLlmRanker(LlmRanker):
             ranked = sorted(zip(self.CHARACTERS[:len(docs)], scores), key=lambda x: x[1], reverse=True)
             return ranked[0][0]
 
+
+
     def rerank(self, query: str, ranking: List[SearchResult]) -> Tuple[str, List[SearchResult]]:
-    # Step 1: Compute scores for each document in the ranking
+        """
+        Rerank the list of SearchResults based on the query. 
+        Returns the most relevant result and the ranked list of results.
+        """
+        # Step 1: Compute scores for each document in the ranking
         scores = []
         for result in ranking:
-            score = self.compare(query, [result])  # Compare query with each document
-            scores.append((result, score))  # Store the result along with its score
+            score = self.compare(query, [result])  # This computes the relevance score for each document
+            scores.append((result, score))  # Append the result and its score
         
-        # Step 2: Sort the results based on their scores (you may need to define what `score` is)
+        # Step 2: Sort the results based on their scores (highest score first)
         ranked_results = sorted(scores, key=lambda x: x[1], reverse=True)  # Sort in descending order of relevance
         
         # Step 3: Return the most relevant result and the list of re-ranked results
@@ -156,4 +162,5 @@ class SetwiseLlmRanker(LlmRanker):
         ranked_docs = [result[0] for result in ranked_results]  # List of documents sorted by score
         
         return top_result, ranked_docs
+
 
