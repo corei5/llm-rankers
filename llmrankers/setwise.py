@@ -142,7 +142,7 @@ class SetwiseLlmRanker(LlmRanker):
             return ranked[0][0]
 
     def rerank(self, query: str, ranking: List[SearchResult]) -> Tuple[str, List[SearchResult]]:
-        # Step 1: Compute scores for each document in the ranking
+    # Step 1: Compute scores for each document in the ranking
         scores = []
         for result in ranking:
             score = self.compare(query, [result])  # Compare query with each document
@@ -156,3 +156,4 @@ class SetwiseLlmRanker(LlmRanker):
         ranked_docs = [result[0] for result in ranked_results]  # List of documents sorted by score
         
         return top_result, ranked_docs
+
