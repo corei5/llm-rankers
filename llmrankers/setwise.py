@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from .rankers import LlmRanker, SearchResult
 import openai
 import time
@@ -141,14 +141,18 @@ class SetwiseLlmRanker(LlmRanker):
             ranked = sorted(zip(self.CHARACTERS[:len(docs)], scores), key=lambda x: x[1], reverse=True)
             return ranked[0][0]
 
-    def heapify(self, arr, n, i, query):
-        if self.num_child * i + 1 < n:
-            docs = [arr[i]] + arr[self.num_child * i + 1: min((self.num_child * (i + 1) + 1), n)]
-            inds = [i] + list(range(self.num_child * i + 1, min((self.num_child * (i + 1) + 1), n)))
-            return sorted([(self.compare(query, docs), indices) for docs, indices in zip(docs, inds)], key=lambda x: x[0], reverse=True)
-        return arr
-
-    def run_llm(self, input_text):
-        pass
-
-
+    def rerank(self, query: str, ranking: List[SearchResult]) -> Tuple[str, List[SearchResult]]:
+        # Step 1: Compute scores for each document in the ranking
+        scores = []
+        for result in ranking:
+            score = self.compare(query, [result])  # Compare query with each document
+            scores.append((result, score))  # Store the result along with its score
+        
+        # Step 2: Sort the results based on their scores (you may need to define what `score` is)
+        ranked_results = sorted(scores, key=lambda x: x[1], reverse=True)  # Sort in descending order of relevance
+        
+        # Step 3: Return the most relevant result and the list of re-ranked results
+        top_result = ranked_results[0][0]  # The most relevant document
+        ranked_docs = [result[0] for result in ranked_results]  # List of documents sorted by score
+        
+        return top_result, ranked_docs
