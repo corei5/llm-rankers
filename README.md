@@ -10,7 +10,7 @@ pip install llm-rankers
 ```
 Or typically for development and research, clone this repo and install as editable,
 ```bash
-git clone https://github.com/corei5/llm-rankers-self-reflection-and-evaluation.git
+git clone https://github.com/corei5/llm-rankers.git
 cd llm-rankers
 pip install -e .
 ```
