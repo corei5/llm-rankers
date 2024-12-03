@@ -4,22 +4,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![OpenAI API](https://img.shields.io/badge/OpenAI-GPT--4-blue)](https://platform.openai.com/)
 
-MC_NEST is a **Monte Carlo Tree Search** framework enhanced with **GPT-4** designed to tackle complex mathematical problems. Inspired by the principles of Monte Carlo Tree Self-Refinement [1], MC_NEST represents a powerful fusion of AI-driven reasoning and algorithmic precision. The framework leverages the **GPT-4** API to refine, evaluate, and improve answers iteratively using **Nash Equilibrium-based exploration strategies** and **importance sampling techniques**.
-
-## Features
-
-- **GPT-4 Integration**: Harness the reasoning power of GPT-4 to solve and refine mathematical problems.
-- **Monte Carlo Tree Search (MCTS)**: An advanced implementation of MCTS with configurable selection policies and initialization strategies.
-- **Multi-Agent Critique & Refinement**: GPT-based agents for answer refinement and critique through structured JSON responses.
-- **Customizable Initialize Strategy**:
-  - **ZERO SHOT**
-  - **DUMMY ANSWER**
-- **Customizable Selection Policies**:
-  - **GREEDY**
-  - **IMPORTANCE SAMPLING**
-  - **PAIRWISE IMPORTANCE SAMPLING**
-- **Reward System**: Uses strict GPT-based evaluation with penalties for overestimation.
-- **Visualization**: Built-in tree-printing utility to debug and analyze the MC_NEST process.
+MC_NEST is a **Monte Carlo Tree Search** framework enhanced with **GPT-4** designed to tackle .........
 
 ## Installation
 
