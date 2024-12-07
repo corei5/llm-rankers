@@ -177,9 +177,9 @@ from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
 import numpy as np
-import json
 from tqdm import tqdm
 from scipy.stats import rankdata
+from datasets import load_dataset
 
 # Load LLaMA model and tokenizer
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -298,11 +298,6 @@ class MC_NEST_Ranking(BaseModel):
         return [(node.text, node.Q) for node in ranked_nodes]
 
 # Load TREC DL dataset and evaluate
-def load_trec_dl(filepath):
-    with open(filepath, "r") as file:
-        data = json.load(file)
-    return data  # Assume format: [{"query": str, "candidates": [str], "relevance": [float]}]
-
 def ndcg_at_k(ranked_list, true_relevance, k=10):
     ranked_relevance = [true_relevance.get(doc, 0) for doc in ranked_list[:k]]
     dcg = sum((2 ** rel - 1) / math.log2(idx + 2) for idx, rel in enumerate(ranked_relevance))
@@ -311,28 +306,32 @@ def ndcg_at_k(ranked_list, true_relevance, k=10):
     return dcg / idcg if idcg > 0 else 0
 
 if __name__ == "__main__":
-    dataset = load_trec_dl("path_to_trec_dl.json")
+    # Load TREC-DL datasets
+    dataset_2019 = load_dataset("ustc-zhangzm/HybRank", split="test_2019")
+    dataset_2020 = load_dataset("ustc-zhangzm/HybRank", split="test_2020")
+
     all_metrics = []
-    for entry in tqdm(dataset):
-        question = entry["query"]
-        texts = entry["candidates"]
-        true_relevance = {text: score for text, score in zip(entry["candidates"], entry["relevance"])}
+    for dataset in [dataset_2019, dataset_2020]:
+        for entry in tqdm(dataset):
+            question = entry["query"]
+            texts = entry["candidates"]
+            true_relevance = {text: score for text, score in zip(entry["candidates"], entry["relevance"])}
 
-        mcts = MC_NEST_Ranking(
-            question=question,
-            texts=texts,
-            max_rollouts=10,
-            exploration_constant=1.0,
-        )
-        rankings, metrics = mcts.run()
+            mcts = MC_NEST_Ranking(
+                question=question,
+                texts=texts,
+                max_rollouts=10,
+                exploration_constant=1.0,
+            )
+            rankings, metrics = mcts.run()
 
-        ranked_texts = [text for text, _ in rankings]
-        ndcg = ndcg_at_k(ranked_texts, true_relevance, k=10)
+            ranked_texts = [text for text, _ in rankings]
+            ndcg = ndcg_at_k(ranked_texts, true_relevance, k=10)
 
-        metrics["NDCG@10"] = ndcg
-        all_metrics.append(metrics)
+            metrics["NDCG@10"] = ndcg
+            all_metrics.append(metrics)
 
     print("Overall Metrics:")
-    for key in metrics:
+    for key in all_metrics[0]:
         avg_metric = np.mean([m[key] for m in all_metrics])
         print(f"{key}: {avg_metric:.4f}")
