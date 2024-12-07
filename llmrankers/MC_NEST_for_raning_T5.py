@@ -310,9 +310,13 @@ if __name__ == "__main__":
     dataset_2019 = load_dataset("ustc-zhangzm/HybRank", split="test_2019")
     dataset_2020 = load_dataset("ustc-zhangzm/HybRank", split="test_2020")
 
+    # Limit to 100 test data points
+    test_size = 100
+
     all_metrics = []
     for dataset in [dataset_2019, dataset_2020]:
-        for entry in tqdm(dataset):
+        subset = dataset.select(range(min(test_size, len(dataset))))  # Select the first `test_size` entries
+        for entry in tqdm(subset):
             question = entry["query"]
             texts = entry["candidates"]
             true_relevance = {text: score for text, score in zip(entry["candidates"], entry["relevance"])}
@@ -331,6 +335,7 @@ if __name__ == "__main__":
             metrics["NDCG@10"] = ndcg
             all_metrics.append(metrics)
 
+    # Calculate and print overall metrics
     print("Overall Metrics:")
     for key in all_metrics[0]:
         avg_metric = np.mean([m[key] for m in all_metrics])
