@@ -7,27 +7,28 @@ import tqdm
 import numpy as np
 from typing import ClassVar
 from pydantic import BaseModel
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
 
 # Load LLaMA model and tokenizer
 DEVICE = "cuda" #if torch.cuda.is_available() else "cpu"
-LLAMA_MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.3"  # Replace with your model path
+FLAN_T5_MODEL_NAME = "google/flan-t5-large"  # Replace with your model path
 
-llama_tokenizer = AutoTokenizer.from_pretrained(LLAMA_MODEL_NAME)
-llama_model = AutoModelForCausalLM.from_pretrained(LLAMA_MODEL_NAME).to(DEVICE)
+# Correctly load FLAN-T5 model
+flan_t5_tokenizer = AutoTokenizer.from_pretrained(FLAN_T5_MODEL_NAME)
+flan_t5_model = AutoModelForSeq2SeqLM.from_pretrained(FLAN_T5_MODEL_NAME).to(DEVICE)
 
-# Helper function to interact with the LLaMA model
-def generate_llama_response(prompt: str, max_length=100, temperature=0.7) -> str:
-    input_ids = llama_tokenizer(prompt, return_tensors="pt").input_ids.to(DEVICE)
-    output_ids = llama_model.generate(
+# Helper function to interact with the FLAN-T5 model
+def generate_flan_response(prompt: str, max_length=100, temperature=0.7) -> str:
+    input_ids = flan_t5_tokenizer(prompt, return_tensors="pt").input_ids.to(DEVICE)
+    output_ids = flan_t5_model.generate(
         input_ids,
         max_length=max_length,
         temperature=temperature,
         top_p=0.9,
         do_sample=True,
     )
-    return llama_tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    return flan_t5_tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
 # MCTS Node definition
 class Node(BaseModel):
@@ -56,7 +57,7 @@ class Node(BaseModel):
     def __repr__(self):
         return f"Node(text='{self.text[:30]}...', Q={self.Q}, visit={self.visit})"
 
-# MCTS Implementation with LLaMA
+# MCTS Implementation with FLAN-T5
 class MC_NEST_Ranking(BaseModel):
     question: str
     texts: list[str]
@@ -86,7 +87,7 @@ class MC_NEST_Ranking(BaseModel):
         prompt = f"Evaluate the relevance of the following text to the question:\n\n" \
                  f"Question: {self.question}\nText: {node.text}\n\n" \
                  "Provide a score between -100 and 100."
-        response = generate_llama_response(prompt, max_length=50)
+        response = generate_flan_response(prompt, max_length=50)
         try:
             return int(response.strip())
         except ValueError:
@@ -96,7 +97,7 @@ class MC_NEST_Ranking(BaseModel):
         prompt = f"Refine the following text to better answer the question:\n\n" \
                  f"Question: {self.question}\nText: {node.text}\n\n" \
                  "Provide the refined text."
-        return generate_llama_response(prompt, max_length=200)
+        return generate_flan_response(prompt, max_length=200)
 
     def uct(self, node: Node):
         if not node.parent:
@@ -147,7 +148,7 @@ class MC_NEST_Ranking(BaseModel):
 
 # Example usage
 if __name__ == "__main__":
-    question = "What is the capital of Germany?"
+    question = "What is the capital of France?"
     texts = [
         "Paris is the capital of France.",
         "Berlin is the capital of Germany.",
